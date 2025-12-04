@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Memorial V6 - Botón Siempre Visible</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    
+    <style>
+      body { font-family: 'Georgia', serif; margin: 0; overflow: hidden; background-color: #000; }
+      
+      /* PANTALLA INICIO */
+      #inicio-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: #000; z-index: 9999; 
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        color: white; transition: opacity 0.5s;
+      }
+      #btn-entrar {
+        padding: 15px 50px; font-size: 1.2rem; margin-top: 30px;
+        background: transparent; border: 2px solid #fff; color: #fff;
+        cursor: pointer; border-radius: 30px; letter-spacing: 2px;
+        transition: 0.3s;
+      }
+      #btn-entrar:hover { background: #fff; color: #000; }
+
+      /* BOTÓN DE MÚSICA - SIEMPRE VISIBLE AHORA */
+      #btn-musica {
+        position: fixed; bottom: 20px; left: 20px; z-index: 99999; 
+        background: rgba(255, 255, 255, 0.2); 
+        border: 2px solid white; color: white;
+        width: 60px; height: 60px; border-radius: 50%;
+        font-size: 30px; cursor: pointer; 
+        display: flex; 
+        align-items: center; justify-content: center;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      }
+      #btn-musica:hover { background: white; color: black; transform: scale(1.1); }
+
+      /* PANEL BIOGRAFÍA */
+      #bio-panel {
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 85%; max-width: 450px;
+        background: rgba(20, 20, 20, 0.95);
+        color: #ddd; padding: 30px; border-radius: 12px; border: 1px solid #555;
+        display: none; z-index: 1000; text-align: center;
+        box-shadow: 0 0 50px rgba(0,0,0,1);
+      }
+      #bio-panel.visible { display: block !important; }
+      #bio-panel img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; margin-bottom: 15px; }
+      .cerrar-btn { padding: 8px 20px; background: #fff; color: #000; border: none; cursor: pointer; margin-top: 15px; border-radius: 5px;}
+    </style>
+
+    <script>
+      // CONTROL DE MÚSICA MANUAL
+      function toggleMusica() {
+        const audio = document.getElementById('musica-fondo');
+        const btn = document.getElementById('btn-musica');
+        
+        if (audio.paused) {
+          audio.play().then(() => {
+             console.log("Audio reproduciendo");
+             btn.innerHTML = "🔊"; // Icono sonando
+          }).catch(e => console.error("Error al reproducir:", e));
+        } else {
+          audio.pause();
+          btn.innerHTML = "🔇"; // Icono silencio
+        }
+      }
+
+      function entrarSitio() {
+        const overlay = document.getElementById('inicio-overlay');
+        overlay.style.opacity = '0';
+        setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        
+        // Intentar reproducir automáticamente
+        toggleMusica();
+      }
+
+      // COMPONENTES AFRAME
+      AFRAME.registerComponent('click-handler', {
+        init: function () {
+          this.el.addEventListener('click', function () {
+            document.getElementById('bio-panel').classList.add('visible');
+          });
+          this.el.addEventListener('mouseenter', function () { document.body.style.cursor = 'pointer'; });
+          this.el.addEventListener('mouseleave', function () { document.body.style.cursor = 'default'; });
+        }
+      });
+
+      AFRAME.registerComponent('control-zoom', {
+        init: function () {
+          const el = this.el;
+          window.addEventListener('wheel', e => el.object3D.translateZ(e.deltaY > 0 ? 1 : -1) * 0.5);
+        }
+      });
+      
+      function cerrarPanel() { document.getElementById('bio-panel').classList.remove('visible'); }
+    </script>
+  </head>
+  <body>
+
+    <div id="inicio-overlay">
+      <h1>In Memoriam</h1>
+      <button id="btn-entrar" onclick="entrarSitio()">INGRESAR</button>
+    </div>
+
+    <button id="btn-musica" onclick="toggleMusica()">🔇</button>
+
+    <div id="bio-panel">
+      <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80">
+      <h2>Juan Perez</h2>
+      <p>1950 - 2023</p>
+      <div style="font-style: italic; margin: 20px 0; color: #ccc;">
+        "No llores ante mi tumba, no estoy allí..."
+      </div>
+      <button class="cerrar-btn" onclick="cerrarPanel()">Cerrar</button>
+    </div>
+
+    <audio id="musica-fondo" loop crossorigin="anonymous">
+      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <a-scene renderer="antialias: true; colorManagement: true;" cursor="rayOrigin: mouse" raycaster="objects: .clickable">
+      <a-assets>
+        <a-asset-item id="modelo-lapida" src="lapida.glb"></a-asset-item>
+        <img id="pasto" src="https://cdn.glitch.global/b3f94300-4803-45d9-b17d-173381b41608/grass01.jpg?v=1677692000000">
+      </a-assets>
+
+      <a-sky color="#87CEEB"></a-sky>
+      <a-plane src="#pasto" position="0 0 0" rotation="-90 0 0" width="150" height="150" repeat="50 50" color="#5d6e50" material="roughness: 1; metalness: 0"></a-plane>
+      
+      <a-light type="directional" position="-2 4 3" intensity="1.5"></a-light>
+      <a-light type="ambient" color="#FFF" intensity="0.8"></a-light>
+
+      <a-entity position="0 0 -3">
+        <a-gltf-model src="#modelo-lapida" scale="2.0 2.0 2.0"></a-gltf-model>
+        <a-text value="Juan Perez" align="center" position="0 3.0 0.2" width="8" color="#FFFFFF"></a-text>
+        <a-text value="1950 - 2023" align="center" position="0 2.6 0.2" width="5" color="#FFFFFF"></a-text>
+        <a-text value="(Tocar para biografia)" align="center" position="0 2.2 0.2" width="3" color="#DDD"></a-text>
+        
+        <a-box class="clickable" click-handler position="0 2.0 0" width="3.5" height="4.5" depth="1" material="opacity: 0; transparent: true"></a-box>
+      </a-entity>
+
+      <a-entity position="0 1.8 0" camera look-controls wasd-controls control-zoom></a-entity>
+    </a-scene>
+  </body>
+</html>
