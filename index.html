@@ -1,152 +1,153 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Memorial Interactivo</title>
+    <title>Memorial V5 - Audio Control</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     
     <style>
-      /* Tipografía elegante */
-      body { font-family: 'Georgia', serif; margin: 0; overflow: hidden; }
+      body { font-family: 'Georgia', serif; margin: 0; overflow: hidden; background-color: #000; }
       
-      /* 1. PANTALLA DE BIENVENIDA (Necesaria para activar el audio) */
+      /* PANTALLA INICIO */
       #inicio-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.9);
+        background: #000; z-index: 9999; 
         display: flex; flex-direction: column; justify-content: center; align-items: center;
-        z-index: 9999; color: white; text-align: center;
-        transition: opacity 1s;
+        color: white; transition: opacity 0.5s;
       }
       #btn-entrar {
-        padding: 15px 40px; font-size: 1.2rem; margin-top: 20px;
-        background: transparent; border: 2px solid white; color: white;
-        cursor: pointer; border-radius: 5px; text-transform: uppercase; letter-spacing: 2px;
+        padding: 15px 50px; font-size: 1.2rem; margin-top: 30px;
+        background: transparent; border: 2px solid #fff; color: #fff;
+        cursor: pointer; border-radius: 30px; letter-spacing: 2px;
+        transition: 0.3s;
       }
-      #btn-entrar:hover { background: white; color: black; }
+      #btn-entrar:hover { background: #fff; color: #000; }
 
-      /* 2. PANEL BIOGRAFÍA (Oculto al principio) */
+      /* BOTÓN FLOTANTE DE MÚSICA (EL SALVAVIDAS) */
+      #btn-musica {
+        position: fixed; bottom: 20px; left: 20px; z-index: 5000;
+        background: rgba(0,0,0,0.5); border: 2px solid white; color: white;
+        width: 50px; height: 50px; border-radius: 50%;
+        font-size: 24px; cursor: pointer; display: none; /* Se muestra al entrar */
+        align-items: center; justify-content: center;
+      }
+      #btn-musica:hover { background: white; color: black; }
+
+      /* PANEL BIOGRAFÍA */
       #bio-panel {
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 80%; max-width: 500px; max-height: 80vh;
-        background: rgba(20, 20, 20, 0.95); /* Fondo oscuro elegante */
-        color: #f0f0f0;
-        padding: 30px; border-radius: 8px; border: 1px solid #555;
-        box-shadow: 0 0 20px rgba(0,0,0,0.8);
-        z-index: 1000; overflow-y: auto; text-align: center;
-        display: none; /* Oculto por defecto */
+        width: 85%; max-width: 450px;
+        background: rgba(20, 20, 20, 0.95);
+        color: #ddd; padding: 30px; border-radius: 12px; border: 1px solid #555;
+        display: none; z-index: 1000; text-align: center;
+        box-shadow: 0 0 50px rgba(0,0,0,1);
       }
-      #bio-panel img {
-        width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
-        border: 3px solid #888; margin-bottom: 15px;
-      }
-      h2 { margin-top: 0; font-weight: normal; letter-spacing: 1px; }
-      .poema { font-style: italic; color: #ccc; margin: 20px 0; line-height: 1.6; }
-      .dedicatoria { font-size: 0.9rem; border-top: 1px solid #444; padding-top: 15px; color: #aaa; }
-      .cerrar-btn {
-        margin-top: 20px; padding: 10px 20px; background: #333; color: white;
-        border: none; cursor: pointer; border-radius: 4px;
-      }
-
-      /* Clase para mostrar el panel */
-      .visible { display: block !important; animation: fadeIn 0.5s; }
-      @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+      #bio-panel.visible { display: block !important; }
+      #bio-panel img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; margin-bottom: 15px; }
+      .cerrar-btn { padding: 8px 20px; background: #fff; color: #000; border: none; cursor: pointer; margin-top: 15px; border-radius: 5px;}
     </style>
 
     <script>
-      // Componente para detectar clics en la tumba
+      // 1. CONTROL DE MÚSICA ROBUSTO
+      function toggleMusica() {
+        const audio = document.getElementById('musica-fondo');
+        const btn = document.getElementById('btn-musica');
+        
+        if (audio.paused) {
+          audio.play();
+          btn.innerHTML = "🔊"; // Icono sonando
+        } else {
+          audio.pause();
+          btn.innerHTML = "🔇"; // Icono silencio
+        }
+      }
+
+      function entrarSitio() {
+        // Ocultar inicio
+        const overlay = document.getElementById('inicio-overlay');
+        overlay.style.opacity = '0';
+        setTimeout(() => { 
+            overlay.style.display = 'none'; 
+            // Mostrar el botón de música
+            document.getElementById('btn-musica').style.display = 'flex';
+        }, 500);
+        
+        // Intentar reproducir
+        const audio = document.getElementById('musica-fondo');
+        audio.volume = 0.5;
+        audio.play().then(() => {
+            document.getElementById('btn-musica').innerHTML = "🔊";
+        }).catch(e => {
+            console.log("Autoplay bloqueado. El usuario deberá usar el botón.");
+            document.getElementById('btn-musica').innerHTML = "🔇";
+        });
+      }
+
+      // 2. COMPONENTES AFRAME (Clic y Zoom)
       AFRAME.registerComponent('click-handler', {
         init: function () {
           this.el.addEventListener('click', function () {
-            // Al hacer clic en la tumba, mostramos el panel
             document.getElementById('bio-panel').classList.add('visible');
           });
+          this.el.addEventListener('mouseenter', function () { document.body.style.cursor = 'pointer'; });
+          this.el.addEventListener('mouseleave', function () { document.body.style.cursor = 'default'; });
         }
       });
 
-      // Componente de Zoom (El que ya teníamos)
       AFRAME.registerComponent('control-zoom', {
         init: function () {
           const el = this.el;
           window.addEventListener('wheel', e => el.object3D.translateZ(e.deltaY > 0 ? 1 : -1) * 0.5);
         }
       });
-
-      // Funciones Globales
-      function entrarSitio() {
-        // 1. Ocultar bienvenida
-        const overlay = document.getElementById('inicio-overlay');
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.style.display = 'none', 1000);
-        
-        // 2. Iniciar Música
-        const audio = document.getElementById('musica-fondo');
-        audio.volume = 0.4; // Volumen suave (40%)
-        audio.play().catch(e => console.log("Audio bloqueado, interacción requerida"));
-      }
-
-      function cerrarPanel() {
-        document.getElementById('bio-panel').classList.remove('visible');
-      }
+      
+      function cerrarPanel() { document.getElementById('bio-panel').classList.remove('visible'); }
     </script>
   </head>
   <body>
 
     <div id="inicio-overlay">
       <h1>In Memoriam</h1>
-      <p>Un espacio de recuerdo y paz</p>
-      <button id="btn-entrar" onclick="entrarSitio()">Ingresar al Santuario</button>
+      <button id="btn-entrar" onclick="entrarSitio()">INGRESAR</button>
     </div>
 
+    <button id="btn-musica" onclick="toggleMusica()">🔇</button>
+
     <div id="bio-panel">
-      <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80" alt="Retrato">
-      
+      <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80">
       <h2>Juan Perez</h2>
       <p>1950 - 2023</p>
-      
-      <div class="poema">
-        "No llores ante mi tumba, no estoy allí.<br>
-        Soy mil vientos que soplan,<br>
-        soy el diamante que brilla en la nieve,<br>
-        soy la luz del sol sobre el grano maduro."
+      <div style="font-style: italic; margin: 20px 0; color: #ccc;">
+        "No llores ante mi tumba, no estoy allí..."
       </div>
-
-      <div class="dedicatoria">
-        <strong>Selección musical por:</strong> María (Hija)<br>
-        <em>"Elegí este piano porque a papá le encantaba escuchar música clásica los domingos por la mañana."</em>
-      </div>
-
       <button class="cerrar-btn" onclick="cerrarPanel()">Cerrar</button>
     </div>
 
     <audio id="musica-fondo" loop>
-      <source src="https://cdn.pixabay.com/download/audio/2022/10/05/audio_6861d8b965.mp3" type="audio/mpeg">
+      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
     </audio>
 
-    <a-scene renderer="antialias: true; colorManagement: true;" cursor="rayOrigin: mouse">
-      
+    <a-scene renderer="antialias: true; colorManagement: true;" cursor="rayOrigin: mouse" raycaster="objects: .clickable">
       <a-assets>
         <a-asset-item id="modelo-lapida" src="lapida.glb"></a-asset-item>
-        <img id="cielo" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg">
         <img id="pasto" src="pasto.jpg">
       </a-assets>
 
-      <a-sky src="#cielo" rotation="0 -130 0"></a-sky>
-
-      <a-plane src="#pasto" position="0 0 0" rotation="-90 0 0" width="150" height="150" repeat="50 50" color="#5d6e50" material="roughness: 1"></a-plane>
+      <a-sky color="#87CEEB"></a-sky>
+      <a-plane src="#pasto" position="0 0 0" rotation="-90 0 0" width="150" height="150" repeat="50 50" color="#5d6e50" material="roughness: 1; metalness: 0"></a-plane>
       
       <a-light type="directional" position="-2 4 3" intensity="1.5"></a-light>
-      <a-light type="ambient" color="#FFF" intensity="1.0"></a-light>
+      <a-light type="ambient" color="#FFF" intensity="0.8"></a-light>
 
-      <a-entity position="0 0 -3" click-handler class="clickable">
-        
+      <a-entity position="0 0 -3">
         <a-gltf-model src="#modelo-lapida" scale="2.0 2.0 2.0"></a-gltf-model>
-        
         <a-text value="Juan Perez" align="center" position="0 3.0 0.2" width="8" color="#FFFFFF"></a-text>
-        <a-text value="(Tocar para leer biografia)" align="center" position="0 2.4 0.2" width="4" color="#DDD"></a-text>
+        <a-text value="1950 - 2023" align="center" position="0 2.6 0.2" width="5" color="#FFFFFF"></a-text>
+        <a-text value="(Tocar para biografia)" align="center" position="0 2.2 0.2" width="3" color="#DDD"></a-text>
+        
+        <a-box class="clickable" click-handler position="0 2.0 0" width="3.5" height="4.5" depth="1" material="opacity: 0; transparent: true"></a-box>
       </a-entity>
 
-      <a-entity position="0 1.8 0" camera look-controls wasd-controls control-zoom>
-        </a-entity>
-      
+      <a-entity position="0 1.8 0" camera look-controls wasd-controls control-zoom></a-entity>
     </a-scene>
   </body>
 </html>
