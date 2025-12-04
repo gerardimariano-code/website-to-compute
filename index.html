@@ -1,56 +1,152 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+  <head>
+    <title>Memorial Interactivo</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    
+    <style>
+      /* Tipografía elegante */
+      body { font-family: 'Georgia', serif; margin: 0; overflow: hidden; }
+      
+      /* 1. PANTALLA DE BIENVENIDA (Necesaria para activar el audio) */
+      #inicio-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        z-index: 9999; color: white; text-align: center;
+        transition: opacity 1s;
+      }
+      #btn-entrar {
+        padding: 15px 40px; font-size: 1.2rem; margin-top: 20px;
+        background: transparent; border: 2px solid white; color: white;
+        cursor: pointer; border-radius: 5px; text-transform: uppercase; letter-spacing: 2px;
+      }
+      #btn-entrar:hover { background: white; color: black; }
 
-<head>
-  <!-- 
-      This is an HTML comment
-      You can write text in a comment and the content won't be visible in the page
-    -->
+      /* 2. PANEL BIOGRAFÍA (Oculto al principio) */
+      #bio-panel {
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 80%; max-width: 500px; max-height: 80vh;
+        background: rgba(20, 20, 20, 0.95); /* Fondo oscuro elegante */
+        color: #f0f0f0;
+        padding: 30px; border-radius: 8px; border: 1px solid #555;
+        box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        z-index: 1000; overflow-y: auto; text-align: center;
+        display: none; /* Oculto por defecto */
+      }
+      #bio-panel img {
+        width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+        border: 3px solid #888; margin-bottom: 15px;
+      }
+      h2 { margin-top: 0; font-weight: normal; letter-spacing: 1px; }
+      .poema { font-style: italic; color: #ccc; margin: 20px 0; line-height: 1.6; }
+      .dedicatoria { font-size: 0.9rem; border-top: 1px solid #444; padding-top: 15px; color: #aaa; }
+      .cerrar-btn {
+        margin-top: 20px; padding: 10px 20px; background: #333; color: white;
+        border: none; cursor: pointer; border-radius: 4px;
+      }
 
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="https://glitch.com/favicon.ico" />
+      /* Clase para mostrar el panel */
+      .visible { display: block !important; animation: fadeIn 0.5s; }
+      @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+    </style>
 
-  <!--
-      This is the page head - it contains info the browser uses
-      Like the title, which appears on the browser tab but not inside the page
-      Further down you'll see the content that displays in the page
-    -->
-  <title>Hello World!</title>
+    <script>
+      // Componente para detectar clics en la tumba
+      AFRAME.registerComponent('click-handler', {
+        init: function () {
+          this.el.addEventListener('click', function () {
+            // Al hacer clic en la tumba, mostramos el panel
+            document.getElementById('bio-panel').classList.add('visible');
+          });
+        }
+      });
 
-  <!-- The website stylesheet -->
-  <link rel="stylesheet" href="/style.css" />
+      // Componente de Zoom (El que ya teníamos)
+      AFRAME.registerComponent('control-zoom', {
+        init: function () {
+          const el = this.el;
+          window.addEventListener('wheel', e => el.object3D.translateZ(e.deltaY > 0 ? 1 : -1) * 0.5);
+        }
+      });
 
-  <!-- The website JavaScript file -->
-  <script src="/script.js" defer></script>
-</head>
+      // Funciones Globales
+      function entrarSitio() {
+        // 1. Ocultar bienvenida
+        const overlay = document.getElementById('inicio-overlay');
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 1000);
+        
+        // 2. Iniciar Música
+        const audio = document.getElementById('musica-fondo');
+        audio.volume = 0.4; // Volumen suave (40%)
+        audio.play().catch(e => console.log("Audio bloqueado, interacción requerida"));
+      }
 
-<body>
-  <!--
-      The body includes the content you see in the page
-      Each element is defined using tags, like this <div></div>
-      The attributes like class="wrapper" let us style elements in the CSS
-    -->
-  <div class="wrapper">
-    <div class="content" role="main">
-      <h1 class="title">Oh hi website!</h1>
-      <img src="/cool-website.svg" class="illustration" alt="cool website" />
-      <div class="instructions">
-        <p>
-          Fork <a href="https://github.com/glitchdotcom/website-to-compute">this project</a> and open it in a GitHub Codespace.
-        </p>
-        <p> Follow the steps in the README to deploy your new website to Fastly in a few steps!
-        </p>
+      function cerrarPanel() {
+        document.getElementById('bio-panel').classList.remove('visible');
+      }
+    </script>
+  </head>
+  <body>
 
+    <div id="inicio-overlay">
+      <h1>In Memoriam</h1>
+      <p>Un espacio de recuerdo y paz</p>
+      <button id="btn-entrar" onclick="entrarSitio()">Ingresar al Santuario</button>
+    </div>
+
+    <div id="bio-panel">
+      <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80" alt="Retrato">
+      
+      <h2>Juan Perez</h2>
+      <p>1950 - 2023</p>
+      
+      <div class="poema">
+        "No llores ante mi tumba, no estoy allí.<br>
+        Soy mil vientos que soplan,<br>
+        soy el diamante que brilla en la nieve,<br>
+        soy la luz del sol sobre el grano maduro."
       </div>
 
-      <footer class="footer">
-        <div>
-          <a class="remix" href="https://github.com/glitchdotcom/website-to-compute">🚧 Get your own site</a>
-        </div>
-      </footer>
-    </div>
-  </div>
-</body>
+      <div class="dedicatoria">
+        <strong>Selección musical por:</strong> María (Hija)<br>
+        <em>"Elegí este piano porque a papá le encantaba escuchar música clásica los domingos por la mañana."</em>
+      </div>
 
+      <button class="cerrar-btn" onclick="cerrarPanel()">Cerrar</button>
+    </div>
+
+    <audio id="musica-fondo" loop>
+      <source src="https://cdn.pixabay.com/download/audio/2022/10/05/audio_6861d8b965.mp3" type="audio/mpeg">
+    </audio>
+
+    <a-scene renderer="antialias: true; colorManagement: true;" cursor="rayOrigin: mouse">
+      
+      <a-assets>
+        <a-asset-item id="modelo-lapida" src="lapida.glb"></a-asset-item>
+        <img id="cielo" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg">
+        <img id="pasto" src="pasto.jpg">
+      </a-assets>
+
+      <a-sky src="#cielo" rotation="0 -130 0"></a-sky>
+
+      <a-plane src="#pasto" position="0 0 0" rotation="-90 0 0" width="150" height="150" repeat="50 50" color="#5d6e50" material="roughness: 1"></a-plane>
+      
+      <a-light type="directional" position="-2 4 3" intensity="1.5"></a-light>
+      <a-light type="ambient" color="#FFF" intensity="1.0"></a-light>
+
+      <a-entity position="0 0 -3" click-handler class="clickable">
+        
+        <a-gltf-model src="#modelo-lapida" scale="2.0 2.0 2.0"></a-gltf-model>
+        
+        <a-text value="Juan Perez" align="center" position="0 3.0 0.2" width="8" color="#FFFFFF"></a-text>
+        <a-text value="(Tocar para leer biografia)" align="center" position="0 2.4 0.2" width="4" color="#DDD"></a-text>
+      </a-entity>
+
+      <a-entity position="0 1.8 0" camera look-controls wasd-controls control-zoom>
+        </a-entity>
+      
+    </a-scene>
+  </body>
 </html>
