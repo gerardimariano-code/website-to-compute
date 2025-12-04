@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Memorial V5 - Audio Control</title>
+    <title>Memorial V6 - Botón Siempre Visible</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     
     <style>
@@ -22,15 +22,18 @@
       }
       #btn-entrar:hover { background: #fff; color: #000; }
 
-      /* BOTÓN FLOTANTE DE MÚSICA (EL SALVAVIDAS) */
+      /* BOTÓN DE MÚSICA - SIEMPRE VISIBLE AHORA */
       #btn-musica {
-        position: fixed; bottom: 20px; left: 20px; z-index: 5000;
-        background: rgba(0,0,0,0.5); border: 2px solid white; color: white;
-        width: 50px; height: 50px; border-radius: 50%;
-        font-size: 24px; cursor: pointer; display: none; /* Se muestra al entrar */
+        position: fixed; bottom: 20px; left: 20px; z-index: 99999; /* Z-index altísimo para que se vea */
+        background: rgba(255, 255, 255, 0.2); 
+        border: 2px solid white; color: white;
+        width: 60px; height: 60px; border-radius: 50%;
+        font-size: 30px; cursor: pointer; 
+        display: flex; /* Visible desde el inicio */
         align-items: center; justify-content: center;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
       }
-      #btn-musica:hover { background: white; color: black; }
+      #btn-musica:hover { background: white; color: black; transform: scale(1.1); }
 
       /* PANEL BIOGRAFÍA */
       #bio-panel {
@@ -47,14 +50,16 @@
     </style>
 
     <script>
-      // 1. CONTROL DE MÚSICA ROBUSTO
+      // CONTROL DE MÚSICA MANUAL
       function toggleMusica() {
         const audio = document.getElementById('musica-fondo');
         const btn = document.getElementById('btn-musica');
         
         if (audio.paused) {
-          audio.play();
-          btn.innerHTML = "🔊"; // Icono sonando
+          audio.play().then(() => {
+             console.log("Audio reproduciendo");
+             btn.innerHTML = "🔊"; // Icono sonando
+          }).catch(e => console.error("Error al reproducir:", e));
         } else {
           audio.pause();
           btn.innerHTML = "🔇"; // Icono silencio
@@ -62,27 +67,17 @@
       }
 
       function entrarSitio() {
-        // Ocultar inicio
+        // Ocultar pantalla negra
         const overlay = document.getElementById('inicio-overlay');
         overlay.style.opacity = '0';
-        setTimeout(() => { 
-            overlay.style.display = 'none'; 
-            // Mostrar el botón de música
-            document.getElementById('btn-musica').style.display = 'flex';
-        }, 500);
+        setTimeout(() => { overlay.style.display = 'none'; }, 500);
         
-        // Intentar reproducir
-        const audio = document.getElementById('musica-fondo');
-        audio.volume = 0.5;
-        audio.play().then(() => {
-            document.getElementById('btn-musica').innerHTML = "🔊";
-        }).catch(e => {
-            console.log("Autoplay bloqueado. El usuario deberá usar el botón.");
-            document.getElementById('btn-musica').innerHTML = "🔇";
-        });
+        // Intentar reproducir automáticamente
+        // Si falla, el usuario tiene el botón gigante para darle play
+        toggleMusica();
       }
 
-      // 2. COMPONENTES AFRAME (Clic y Zoom)
+      // COMPONENTES AFRAME
       AFRAME.registerComponent('click-handler', {
         init: function () {
           this.el.addEventListener('click', function () {
@@ -122,8 +117,8 @@
       <button class="cerrar-btn" onclick="cerrarPanel()">Cerrar</button>
     </div>
 
-    <audio id="musica-fondo" loop>
-      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    <audio id="musica-fondo" loop crossorigin="anonymous">
+      <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
     </audio>
 
     <a-scene renderer="antialias: true; colorManagement: true;" cursor="rayOrigin: mouse" raycaster="objects: .clickable">
