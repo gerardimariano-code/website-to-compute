@@ -1,99 +1,400 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
   <head>
-    <meta charset="UTF-8">
-    <title>Parque Memorial V30 - Final</title>
-
+    <title>Parque Memorial V29b - Netlify Ready</title>
 
 
     
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-environment-component@1.3.2/dist/aframe-environment-component.min.js"></script>
-
+    
     <style>
-      #pantalla-carga {
+      body { font-family: 'Georgia', serif; margin: 0; overflow: hidden; background-color: #000; }
+      
+      /* PANTALLA INICIO */
+      #inicio-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background-color: #000; z-index: 9999; display: flex;
-        flex-direction: column; justify-content: center; align-items: center;
-        color: white; font-family: sans-serif; transition: opacity 1s;
+        background: #000; z-index: 9999; 
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        color: white; transition: opacity 0.5s;
       }
-      .loader {
-        border: 5px solid #f3f3f3; border-top: 5px solid #3498db;
-        border-radius: 50%; width: 50px; height: 50px;
-        animation: spin 1s linear infinite; margin-bottom: 20px;
-      }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       #btn-entrar {
-        padding: 15px 30px; font-size: 18px; cursor: pointer;
-        background: #3498db; color: white; border: none; border-radius: 5px;
-        display: none; /* Se oculta hasta que cargue */
+        padding: 15px 50px; font-size: 1.2rem; margin-top: 30px;
+        background: transparent; border: 2px solid #fff; color: #fff;
+        cursor: pointer; border-radius: 30px; letter-spacing: 2px;
+        transition: 0.3s;
       }
+      #btn-entrar:hover { background: #fff; color: #000; }
+
+      /* COPYRIGHT FOOTER */
+      #footer-copyright {
+        position: fixed; 
+        bottom: 5px; 
+        left: 0; 
+        width: 100%;
+        text-align: center; 
+        color: rgba(255, 255, 255, 0.4); 
+        font-size: 0.75rem; 
+        z-index: 9998; 
+        pointer-events: none; 
+        font-family: sans-serif;
+      }
+
+      /* BOTÓN MÚSICA */
+      #btn-musica {
+        position: fixed; bottom: 30px; left: 20px; z-index: 99999;
+        background: rgba(255, 255, 255, 0.2); border: 2px solid white; color: white;
+        width: 50px; height: 50px; border-radius: 50%;
+        font-size: 24px; cursor: pointer; 
+        display: none; align-items: center; justify-content: center;
+      }
+
+      /* PANEL LATERAL */
+      #bio-panel {
+        position: fixed; 
+        top: 50%; 
+        right: 10px; 
+        transform: translateY(-50%); 
+        left: auto; 
+        width: 90%; 
+        max-width: 750px; 
+        max-height: 90vh;
+        background: rgba(20, 20, 20, 0.98);
+        color: #ddd; padding: 0; border-radius: 12px; border: 1px solid #555;
+        display: none; z-index: 1000; text-align: center;
+        box-shadow: 0 0 50px rgba(0,0,0,1);
+        overflow-y: auto;
+      }
+      
+      #bio-panel.visible { display: block !important; animation: fadeIn 0.3s; }
+      
+      @keyframes fadeIn { 
+        from {opacity:0; transform:translateY(-45%);} 
+        to {opacity:1; transform:translateY(-50%);}
+      }
+
+      /* Estilos Internos */
+      .panel-header { padding: 30px 20px 10px 20px; background: linear-gradient(to bottom, #333, #111); }
+      #panel-img { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; margin-bottom: 15px; }
+      h2 { margin: 5px 0; color: #fff; font-size: 1.8rem; }
+      .fechas { color: #aaa; font-size: 1rem; margin-bottom: 15px; }
+      .poema { font-style: italic; color: #ccc; padding: 15px 30px; font-size: 1rem; line-height: 1.5; }
+
+      .muro-seccion { text-align: left; padding: 25px; background: #0a0a0a; border-top: 1px solid #444; }
+      .muro-titulo { font-size: 1.1rem; color: #fff; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+      
+      #lista-mensajes { list-style: none; padding: 0; margin: 0 0 25px 0; max-height: 300px; overflow-y: auto;}
+      .mensaje-item { background: #222; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; border-left: 4px solid #888; }
+      .mensaje-autor { font-weight: bold; color: #fff; display: block; margin-bottom: 5px; font-size: 1rem; }
+      .mensaje-fecha { font-size: 0.7rem; color: #666; float: right; }
+      
+      .mensaje-foto { width: 100%; height: auto; margin-top: 10px; border-radius: 6px; display: block; }
+      
+      .form-post { display: flex; flex-direction: column; gap: 10px; background: #1a1a1a; padding: 15px; border-radius: 8px;}
+      input, textarea { background: #333; border: 1px solid #555; color: white; padding: 10px; border-radius: 4px; font-family: inherit; }
+      button.btn-publicar { background: #fff; color: #000; border: none; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 4px; margin-top: 5px; }
+      button:disabled { background: #555; cursor: wait; }
+      .cerrar-btn { position: absolute; top: 15px; right: 20px; background: transparent; color: #fff; border: none; font-size: 2rem; cursor: pointer; z-index: 1001; line-height: 1; padding: 0;}
     </style>
 
-    <script>
-      // Script para manejar la carga y el audio
-      document.addEventListener('DOMContentLoaded', function() {
-        const scene = document.querySelector('a-scene');
-        const pantalla = document.getElementById('pantalla-carga');
-        const btn = document.getElementById('btn-entrar');
-        const audio = document.getElementById('audio-ambiente');
-        const textoCarga = document.getElementById('texto-carga');
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js";
+      import { getFirestore, collection, addDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js";
 
-        // Cuando la escena 3D esté lista
-        scene.addEventListener('loaded', function () {
-          textoCarga.style.display = 'none'; // Ocultar texto "Cargando..."
-          document.querySelector('.loader').style.display = 'none'; // Ocultar ruedita
-          btn.style.display = 'block'; // Mostrar botón "Entrar"
-        });
+      const CLOUDINARY_CLOUD_NAME = 'dwhlovkil'; 
+      const CLOUDINARY_UPLOAD_PRESET = 'memorial_fotos';
 
-        // Al hacer clic en Entrar
-        btn.addEventListener('click', function() {
-          pantalla.style.opacity = '0';
-          setTimeout(() => { pantalla.style.display = 'none'; }, 1000);
-          audio.play().catch(e => console.log("Audio requiere interacción extra"));
+      const firebaseConfig = {
+        apiKey: "AIzaSyB4pnHN6XHqCpGLTarrqjclStB5FcofsFY",
+        authDomain: "memorial-3d.firebaseapp.com",
+        projectId: "memorial-3d",
+        storageBucket: "memorial-3d.firebasestorage.app",
+        messagingSenderId: "1050057123458",
+        appId: "1:1050057123458:web:723085a3fa6f67e716369b"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      let tumbaActualId = "";
+      let unsubscribe = null;
+      window.panelAbierto = false; 
+
+      async function uploadToCloudinary(file) {
+          const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+          const response = await fetch(url, { method: 'POST', body: formData });
+          if (!response.ok) throw new Error("Cloudinary error");
+          const data = await response.json();
+          return data.secure_url; 
+      }
+
+      window.entrarSitio = function() {
+        const overlay = document.getElementById('inicio-overlay');
+        overlay.style.opacity = '0';
+        setTimeout(() => { 
+            overlay.style.display = 'none'; 
+            document.getElementById('btn-musica').style.display = 'flex';
+        }, 500);
+      }
+
+      window.toggleMusica = function() {
+        const audio = document.getElementById('reproductor-audio');
+        const btn = document.getElementById('btn-musica');
+        if (audio.paused) {
+          audio.play().then(() => btn.innerHTML = "🔊").catch(e => console.error(e));
+        } else {
+          audio.pause();
+          btn.innerHTML = "🔇";
+        }
+      }
+
+      window.abrirPerfil = function(datos) {
+        window.panelAbierto = true; 
+        const panel = document.getElementById('bio-panel');
+        const audio = document.getElementById('reproductor-audio');
+        const btnMusica = document.getElementById('btn-musica');
+
+        tumbaActualId = datos.nombre.trim(); 
+
+        document.getElementById('panel-nombre').innerText = datos.nombre;
+        document.getElementById('panel-fechas').innerText = datos.fechas;
+        document.getElementById('panel-poema').innerText = `"${datos.poema}"`;
+        document.getElementById('panel-img').src = datos.foto;
+
+        audio.src = datos.cancion; 
+        audio.volume = 0.5;
+        audio.play().then(() => btnMusica.innerHTML = "🔊").catch(e => btnMusica.innerHTML = "🔇");
+
+        cargarMensajesReales(tumbaActualId);
+        panel.classList.add('visible');
+      }
+
+      window.cerrarPanel = function() {
+        window.panelAbierto = false; 
+        document.getElementById('bio-panel').classList.remove('visible');
+        document.getElementById('reproductor-audio').pause();
+        if (unsubscribe) unsubscribe();
+      }
+
+      window.publicarMensaje = async function() {
+        const autorInput = document.getElementById('input-autor');
+        const textoInput = document.getElementById('input-texto');
+        const fotoInput = document.getElementById('input-foto');
+        const btn = document.querySelector('.btn-publicar');
+        const autor = autorInput.value.trim() || "Anónimo";
+        const texto = textoInput.value.trim();
+        const archivoFoto = fotoInput.files[0];
+
+        if (texto === "" && !archivoFoto) { alert("Escribe un mensaje o sube una foto."); return; }
+
+        btn.disabled = true;
+        btn.innerText = "Subiendo foto...";
+        let fotoUrl = "";
+        try {
+          if (archivoFoto) { fotoUrl = await uploadToCloudinary(archivoFoto); }
+          btn.innerText = "Publicando...";
+          await addDoc(collection(db, "recuerdos"), {
+            tumba: tumbaActualId, autor: autor, mensaje: texto, foto: fotoUrl, fecha: Date.now()
+          });
+          textoInput.value = ""; fotoInput.value = ""; autorInput.value = "";
+          alert("¡Recuerdo guardado!");
+        } catch (error) { console.error("Error:", error); alert("Error al guardar.");
+        } finally { btn.disabled = false; btn.innerText = "PUBLICAR RECUERDO"; }
+      }
+
+      function cargarMensajesReales(nombreTumba) {
+        const lista = document.getElementById('lista-mensajes');
+        lista.innerHTML = "<li style='color:#888; padding:10px;'>Cargando...</li>";
+        const q = query(collection(db, "recuerdos"), where("tumba", "==", nombreTumba.trim()));
+        if (unsubscribe) unsubscribe(); 
+        unsubscribe = onSnapshot(q, (snapshot) => {
+          lista.innerHTML = ""; 
+          if (snapshot.empty) { lista.innerHTML = "<li style='color:#888; padding:10px;'>Sé el primero en dejar un recuerdo.</li>"; return; }
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            const fecha = new Date(data.fecha).toLocaleDateString();
+            const li = document.createElement('li');
+            li.className = 'mensaje-item';
+            let html = `<span class="mensaje-fecha">${fecha}</span><span class="mensaje-autor">${data.autor}</span>${data.mensaje}`;
+            if (data.foto) { html += `<img src="${data.foto}" class="mensaje-foto">`; } 
+            li.innerHTML = html;
+            lista.prepend(li);
+          });
         });
+      }
+
+      // --- COMPONENTES A-FRAME ---
+      AFRAME.registerComponent('tumba-interactiva', {
+        schema: {
+          nombre: {type: 'string', default: 'Desconocido'},
+          fechas: {type: 'string', default: ''},
+          poema: {type: 'string', default: ''},
+          foto: {type: 'string', default: ''},
+          cancion: {type: 'string', default: ''}
+        },
+        init: function () {
+          const data = this.data;
+          this.el.addEventListener('click', function () { window.abrirPerfil(data); });
+          this.el.addEventListener('mouseenter', function () { document.body.style.cursor = 'pointer'; this.setAttribute('scale', '1.05 1.05 1.05'); });
+          this.el.addEventListener('mouseleave', function () { document.body.cursor = 'default'; this.setAttribute('scale', '1 1 1'); });
+        }
+      });
+
+      AFRAME.registerComponent('control-zoom', {
+        init: function () {
+          const el = this.el;
+          window.addEventListener('wheel', function(e) {
+            if (window.panelAbierto) return; 
+            const delta = e.deltaY > 0 ? 1 : -1;
+            el.object3D.translateZ(delta * 0.5);
+          });
+        }
       });
     </script>
   </head>
   <body>
 
-    <div id="pantalla-carga">
-      <div class="loader"></div>
-      <h2 id="texto-carga">Cargando el Santuario...</h2>
-      <button id="btn-entrar">INGRESAR AL SANTUARIO</button>
+    <div id="inicio-overlay">
+      <h1>Parque Memorial</h1>
+      <p>Un lugar de encuentro y paz</p>
+      <button id="btn-entrar" onclick="window.entrarSitio()">ENTRAR AL PARQUE</button>
     </div>
 
-    <audio id="audio-ambiente" src="musica.mp3" loop></audio>
+    <div id="footer-copyright">
+        © 2025 Parque Memorial Virtual - Todos los derechos reservados. Prohibida su copia o reproducción.
+    </div>
 
-    <a-scene loading-screen="enabled: false">
-      
+    <button id="btn-musica" onclick="window.toggleMusica()">🔇</button>
+
+    <div id="bio-panel">
+      <button class="cerrar-btn" onclick="window.cerrarPanel()">×</button>
+      <div class="panel-header">
+        <img id="panel-img" src="">
+        <h2 id="panel-nombre">Nombre</h2>
+        <div id="panel-fechas" class="fechas">0000 - 0000</div>
+        <div id="panel-poema" class="poema">...</div>
+      </div>
+      <div class="muro-seccion">
+        <div class="muro-titulo">Libro de Visitas y Recuerdos</div>
+        <ul id="lista-mensajes"></ul>
+        <div class="form-post">
+          <input type="text" id="input-autor" placeholder="Tu nombre (opcional)">
+          <textarea id="input-texto" rows="3" placeholder="Escribe un recuerdo o dedicatoria..."></textarea>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:0.9rem; color:#aaa;">📷 Foto:</span>
+            <input type="file" id="input-foto" accept="image/*">
+          </div>
+          <button class="btn-publicar" onclick="window.publicarMensaje()">PUBLICAR RECUERDO</button>
+        </div>
+      </div>
+    </div>
+
+    <audio id="reproductor-audio" loop></audio>
+
+    <a-scene renderer="antialias: true; colorManagement: true;" cursor="rayOrigin: mouse" raycaster="objects: .clickable">
       <a-assets>
         <a-asset-item id="modelo-lapida" src="lapida.glb"></a-asset-item>
-        <img id="textura-pasto" src="pasto.jpg">
-        <img id="foto-difunto" src="foto2.jpg">
+        <img id="pasto" src="https://cdn.glitch.global/360-image-gallery-boilerplate/img/sechelt.jpg" crossorigin="anonymous">
+        
+        <a-mixin id="arbol" geometry="primitive: cone; radiusBottom: 1.5; height: 4" material="color: #2E8B57" position="0 2 0"></a-mixin>
+        <a-mixin id="tronco" geometry="primitive: cylinder; radius: 0.4; height: 1.5" material="color: #8B4513" position="0 0.75 0"></a-mixin>
       </a-assets>
 
       <a-sky color="#87CEEB"></a-sky>
-      <a-entity light="type: ambient; color: #BBB"></a-entity>
-      <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-0.5 1 1"></a-entity>
+      <a-plane position="0 0 -10" rotation="-90 0 0" width="100" height="100" color="#5d6e50" material="roughness: 1"></a-plane>
 
-      <a-plane src="#textura-pasto" rotation="-90 0 0" width="100" height="100" repeat="20 20"></a-plane>
+      <a-light type="directional" position="-10 20 10" intensity="1.2" castShadow="true"></a-light>
+      <a-light type="ambient" color="#FFF" intensity="0.6"></a-light>
 
-      <a-entity position="0 0 -4">
-        <a-gltf-model src="#modelo-lapida" scale="0.5 0.5 0.5"></a-gltf-model>
-        
-        <a-text value="Juan Perez" align="center" position="0 2.2 0.1" color="#333" width="6"></a-text>
-        <a-text value="1950 - 2023" align="center" position="0 2 0.1" color="#555" width="4"></a-text>
+      <a-plane position="0 0.02 -15" rotation="-90 0 0" width="4" height="60" color="#7a7a7a" material="roughness: 1"></a-plane>
+      <a-plane position="0 0.02 -15" rotation="-90 90 0" width="2" height="40" color="#7a7a7a" material="roughness: 1"></a-plane>
 
-        <a-image src="#foto-difunto" position="0 1.2 0.2" width="0.8" height="1"></a-image>
+      <a-entity position="-3 0 -12" rotation="0 45 0">
+        <a-box color="#8B4513" position="0 0.4 0" width="2" height="0.1" depth="0.5"></a-box> 
+        <a-box color="#8B4513" position="0 0.2 0.2" width="0.1" height="0.4" depth="0.1"></a-box> 
+        <a-box color="#8B4513" position="0 0.2 -0.2" width="0.1" height="0.4" depth="0.1"></a-box> 
+      </a-entity>
+      <a-entity position="3 0 -12" rotation="0 -45 0">
+        <a-box color="#8B4513" position="0 0.4 0" width="2" height="0.1" depth="0.5"></a-box>
+        <a-box color="#8B4513" position="0 0.2 0.2" width="0.1" height="0.4" depth="0.1"></a-box>
+        <a-box color="#8B4513" position="0 0.2 -0.2" width="0.1" height="0.4" depth="0.1"></a-box>
       </a-entity>
 
-      <a-entity position="0 1.6 0">
-        <a-camera look-controls wasd-controls>
-          <a-cursor color="yellow"></a-cursor>
-        </a-camera>
+      <a-entity position="0 0 -15">
+        <a-cylinder color="#555" height="1" radius="1"></a-cylinder>
+        <a-sphere color="#ddd" position="0 1.5 0" radius="0.8" material="metalness: 0.5; roughness: 0.2"></a-sphere>
+        <a-torus color="#aaa" position="0 2 0" radius="1.2" radius-tubular="0.1" rotation="45 45 0"></a-torus>
       </a-entity>
 
+      <a-entity position="-6 0 -5"> <a-entity mixin="tronco"></a-entity> <a-entity mixin="arbol"></a-entity> </a-entity>
+      <a-entity position="6 0 -5"> <a-entity mixin="tronco"></a-entity> <a-entity mixin="arbol"></a-entity> </a-entity>
+      <a-entity position="-6 0 -20"> <a-entity mixin="tronco"></a-entity> <a-entity mixin="arbol"></a-entity> </a-entity>
+      <a-entity position="6 0 -20"> <a-entity mixin="tronco"></a-entity> <a-entity mixin="arbol"></a-entity> </a-entity>
+      <a-entity position="-10 0 -30"> <a-entity mixin="tronco"></a-entity> <a-entity mixin="arbol"></a-entity> </a-entity>
+      <a-entity position="10 0 -30"> <a-entity mixin="tronco"></a-entity> <a-entity mixin="arbol"></a-entity> </a-entity>
+
+      <a-entity position="-5 0 0" rotation="0 20 0">
+        <a-cylinder color="#333" height="2" radius="0.05"></a-cylinder>
+        <a-box color="#fff" position="0 1.8 0" width="1.5" height="0.5" depth="0.1"></a-box>
+        <a-text value="PARCELA 1" color="black" align="center" position="0 1.8 0.06" width="4"></a-text>
+      </a-entity>
+      <a-entity position="-5 0 -22" rotation="0 20 0">
+        <a-cylinder color="#333" height="2" radius="0.05"></a-cylinder>
+        <a-box color="#fff" position="0 1.8 0" width="1.5" height="0.5" depth="0.1"></a-box>
+        <a-text value="PARCELA 2" color="black" align="center" position="0 1.8 0.06" width="4"></a-text>
+      </a-entity>
+
+      <a-entity position="-3 0 -4">
+        <a-gltf-model src="#modelo-lapida" scale="2 2 2"></a-gltf-model>
+        <a-entity position="0 2.8 0.25">
+            <a-circle color="white" radius="0.55" position="0 0 -0.01"></a-circle>
+            <a-circle src="https://images.unsplash.com/photo-1544005313-94ddf0286df2" radius="0.5"></a-circle>
+        </a-entity>
+        <a-text value="Juan Perez" align="center" position="0 2.1 0.25" width="7" color="#333"></a-text>
+        <a-text value="1950 - 2023" align="center" position="0 1.8 0.25" width="5" color="#333"></a-text>
+        <a-box class="clickable" position="0 2 0" width="3" height="4" depth="1" material="opacity: 0; transparent: true"
+               tumba-interactiva="nombre: Juan Perez; fechas: 1950 - 2023; poema: Soy mil vientos...; foto: https://images.unsplash.com/photo-1544005313-94ddf0286df2; cancion: musica.mp3"></a-box>
+      </a-entity>
+
+      <a-entity position="3 0 -4">
+        <a-gltf-model src="#modelo-lapida" scale="2 2 2"></a-gltf-model>
+        <a-entity position="0 2.8 0.25">
+            <a-circle color="white" radius="0.55" position="0 0 -0.01"></a-circle>
+            <a-circle src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d" radius="0.5"></a-circle>
+        </a-entity>
+        <a-text value="Maria Gonzalez" align="center" position="0 2.1 0.25" width="7" color="#333"></a-text>
+        <a-text value="1960 - 2024" align="center" position="0 1.8 0.25" width="5" color="#333"></a-text>
+        <a-box class="clickable" position="0 2 0" width="3" height="4" depth="1" material="opacity: 0; transparent: true"
+               tumba-interactiva="nombre: Maria Gonzalez; fechas: 1960 - 2024; poema: Aquellos que amamos...; foto: https://images.unsplash.com/photo-1506794778202-cad84cf45f1d; cancion: cancion2.mp3"></a-box>
+      </a-entity>
+
+      <a-entity position="-3 0 -29"> 
+        <a-gltf-model src="#modelo-lapida" scale="2 2 2"></a-gltf-model>
+        <a-entity position="0 2.8 0.25">
+            <a-circle color="white" radius="0.55" position="0 0 -0.01"></a-circle>
+            <a-circle src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e" radius="0.5"></a-circle>
+        </a-entity>
+        <a-text value="Carlos Ruiz" align="center" position="0 2.1 0.25" width="7" color="#333"></a-text>
+        <a-text value="1945 - 2020" align="center" position="0 1.8 0.25" width="5" color="#333"></a-text>
+        <a-box class="clickable" position="0 2 0" width="3" height="4" depth="1" material="opacity: 0; transparent: true"
+               tumba-interactiva="nombre: Carlos Ruiz; fechas: 1945 - 2020; poema: La vida es un sueño...; foto: https://images.unsplash.com/photo-1500648767791-00dcc994a43e; cancion: musica.mp3"></a-box>
+      </a-entity>
+
+      <a-entity position="3 0 -29"> 
+        <a-gltf-model src="#modelo-lapida" scale="2 2 2"></a-gltf-model>
+        <a-entity position="0 2.8 0.25">
+            <a-circle color="white" radius="0.55" position="0 0 -0.01"></a-circle>
+            <a-circle src="https://images.unsplash.com/photo-1534528741775-53994a69daeb" radius="0.5"></a-circle>
+        </a-entity>
+        <a-text value="Ana Lopez" align="center" position="0 2.1 0.25" width="7" color="#333"></a-text>
+        <a-text value="1975 - 2021" align="center" position="0 1.8 0.25" width="5" color="#333"></a-text>
+        <a-box class="clickable" position="0 2 0" width="3" height="4" depth="1" material="opacity: 0; transparent: true"
+               tumba-interactiva="nombre: Ana Lopez; fechas: 1975 - 2021; poema: Siempre en nuestros corazones...; foto: https://images.unsplash.com/photo-1534528741775-53994a69daeb; cancion: cancion2.mp3"></a-box>
+      </a-entity>
+
+      <a-entity position="0 1.8 0" camera look-controls wasd-controls="acceleration: 50" control-zoom></a-entity>
     </a-scene>
   </body>
 </html>
