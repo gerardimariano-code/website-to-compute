@@ -1,37 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
-    <title>Parque Memorial V29 - Final</title>
+    <meta charset="UTF-8">
+    <title>Parque Memorial V30 - Final</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    
+    <script src="https://unpkg.com/aframe-environment-component@1.3.2/dist/aframe-environment-component.min.js"></script>
+
     <style>
-      /* Estilos Omitidos por brevedad */
+      #pantalla-carga {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: #000; z-index: 9999; display: flex;
+        flex-direction: column; justify-content: center; align-items: center;
+        color: white; font-family: sans-serif; transition: opacity 1s;
+      }
+      .loader {
+        border: 5px solid #f3f3f3; border-top: 5px solid #3498db;
+        border-radius: 50%; width: 50px; height: 50px;
+        animation: spin 1s linear infinite; margin-bottom: 20px;
+      }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      #btn-entrar {
+        padding: 15px 30px; font-size: 18px; cursor: pointer;
+        background: #3498db; color: white; border: none; border-radius: 5px;
+        display: none; /* Se oculta hasta que cargue */
+      }
     </style>
 
-    <script type="module">
-      /* Lógica de Firebase y Componentes A-Frame Omitida por brevedad */
+    <script>
+      // Script para manejar la carga y el audio
+      document.addEventListener('DOMContentLoaded', function() {
+        const scene = document.querySelector('a-scene');
+        const pantalla = document.getElementById('pantalla-carga');
+        const btn = document.getElementById('btn-entrar');
+        const audio = document.getElementById('audio-ambiente');
+        const textoCarga = document.getElementById('texto-carga');
+
+        // Cuando la escena 3D esté lista
+        scene.addEventListener('loaded', function () {
+          textoCarga.style.display = 'none'; // Ocultar texto "Cargando..."
+          document.querySelector('.loader').style.display = 'none'; // Ocultar ruedita
+          btn.style.display = 'block'; // Mostrar botón "Entrar"
+        });
+
+        // Al hacer clic en Entrar
+        btn.addEventListener('click', function() {
+          pantalla.style.opacity = '0';
+          setTimeout(() => { pantalla.style.display = 'none'; }, 1000);
+          audio.play().catch(e => console.log("Audio requiere interacción extra"));
+        });
+      });
     </script>
   </head>
   <body>
 
-    <audio id="reproductor-audio" loop></audio>
+    <div id="pantalla-carga">
+      <div class="loader"></div>
+      <h2 id="texto-carga">Cargando el Santuario...</h2>
+      <button id="btn-entrar">INGRESAR AL SANTUARIO</button>
+    </div>
 
-    <a-scene renderer="antialias: true; colorManagement: true;" cursor="rayOrigin: mouse" raycaster="objects: .clickable">
+    <audio id="audio-ambiente" src="musica.mp3" loop></audio>
+
+    <a-scene loading-screen="enabled: false">
+      
       <a-assets>
         <a-asset-item id="modelo-lapida" src="lapida.glb"></a-asset-item>
-        <img id="pasto" src="https://cdn.glitch.global/360-image-gallery-boilerplate/img/sechelt.jpg" crossorigin="anonymous">
-        
-        <a-mixin id="arbol" geometry="primitive: cone; radiusBottom: 1.5; height: 4" material="color: #2E8B57" position="0 2 0"></a-mixin>
-        <a-mixin id="tronco" geometry="primitive: cylinder; radius: 0.4; height: 1.5" material="color: #8B4513" position="0 0.75 0"></a-mixin>
+        <img id="textura-pasto" src="pasto.jpg">
+        <img id="foto-difunto" src="foto2.jpg">
       </a-assets>
 
       <a-sky color="#87CEEB"></a-sky>
-      <a-plane position="0 0 -10" rotation="-90 0 0" width="100" height="100" color="#5d6e50" material="roughness: 1"></a-plane>
-      <a-entity position="-3 0 -4">
-        <a-gltf-model src="#modelo-lapida" scale="2 2 2"></a-gltf-model>
-        </a-entity>
-      
-      <a-entity position="0 1.8 0" camera look-controls wasd-controls="acceleration: 50" control-zoom></a-entity>
+      <a-entity light="type: ambient; color: #BBB"></a-entity>
+      <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-0.5 1 1"></a-entity>
+
+      <a-plane src="#textura-pasto" rotation="-90 0 0" width="100" height="100" repeat="20 20"></a-plane>
+
+      <a-entity position="0 0 -4">
+        <a-gltf-model src="#modelo-lapida" scale="0.5 0.5 0.5"></a-gltf-model>
+        
+        <a-text value="Juan Perez" align="center" position="0 2.2 0.1" color="#333" width="6"></a-text>
+        <a-text value="1950 - 2023" align="center" position="0 2 0.1" color="#555" width="4"></a-text>
+
+        <a-image src="#foto-difunto" position="0 1.2 0.2" width="0.8" height="1"></a-image>
+      </a-entity>
+
+      <a-entity position="0 1.6 0">
+        <a-camera look-controls wasd-controls>
+          <a-cursor color="yellow"></a-cursor>
+        </a-camera>
+      </a-entity>
+
     </a-scene>
   </body>
 </html>
